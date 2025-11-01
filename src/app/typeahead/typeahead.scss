@@ -1,0 +1,11 @@
+    /* Your custom styles */
+    .typeahead-container { position: relative; }
+    .results-panel { 
+      background: white; 
+      border: 1px solid #ccc;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .result-item { padding: 8px; cursor: pointer; }
+    .result-item.active { background: #f0f0f0; }
+    .result-item:hover { background: #e0e0e0; }
