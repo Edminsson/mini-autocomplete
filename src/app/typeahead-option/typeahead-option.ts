@@ -1,5 +1,5 @@
-import { FocusableOption, FocusOrigin } from '@angular/cdk/a11y';
-import { ChangeDetectorRef, Component, ElementRef, inject } from '@angular/core';
+import { FocusableOption, FocusOrigin, Highlightable, ListKeyManagerOption } from '@angular/cdk/a11y';
+import { ChangeDetectorRef, Component, ElementRef, inject, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-typeahead-option',
@@ -8,14 +8,18 @@ import { ChangeDetectorRef, Component, ElementRef, inject } from '@angular/core'
   styleUrl: './typeahead-option.scss',  
   host: {
     'role': 'option',
+    '[class.mat-mdc-option-active]': 'active',
     'class': 'typeahead-option',
   },
 })
-export class TypeaheadOption implements FocusableOption {
+export class TypeaheadOption implements ListKeyManagerOption, Highlightable, FocusableOption {
   private _element = inject<ElementRef<HTMLElement>>(ElementRef);
   private _active = false;
   private _changeDetectorRef = inject(ChangeDetectorRef);
 
+   /** Element containing the option's text. */
+   @ViewChild('text', {static: true}) _text: ElementRef<HTMLElement> | undefined;
+ 
    /**
     * Whether or not the option is currently active and ready to be selected.
     * An active option displays styles as if it is focused, but the
@@ -25,6 +29,15 @@ export class TypeaheadOption implements FocusableOption {
     get active(): boolean {
       return this._active;
     }
+
+   /**
+    * The displayed value of the option. It is necessary to show the selected option in the
+    * select's trigger.
+    */
+   get viewValue(): string {
+     // TODO(kara): Add input property alternative for node envs.
+     return (this._text?.nativeElement.textContent || '').trim();
+   }
 
   /** Sets focus onto this option. */
    focus(_origin?: FocusOrigin, options?: FocusOptions): void {
@@ -65,6 +78,11 @@ export class TypeaheadOption implements FocusableOption {
         this._changeDetectorRef.markForCheck();
       }
     }
+
+   /** Gets the label to be used when determining whether the option should be focused. */
+   getLabel(): string {
+     return this.viewValue;
+   }
  
 
 }

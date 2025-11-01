@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef, TemplateRef, ViewContainerRef, inject, ContentChildren, QueryList, ChangeDetectorRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, TemplateRef, ViewContainerRef, inject, ContentChildren, QueryList, ChangeDetectorRef, ViewChildren } from '@angular/core';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { ActiveDescendantKeyManager } from '@angular/cdk/a11y';
@@ -18,7 +18,8 @@ export class Typeahead {
   @ViewChild('input') input!: ElementRef<HTMLInputElement>;
   @ViewChild('resultsPanel') resultsTemplate!: TemplateRef<any>;
   /** Reference to all options within the autocomplete. */
-  @ContentChildren(TypeaheadOption, {descendants: true}) options!: QueryList<TypeaheadOption>;
+  //@ContentChildren(TypeaheadOption, {descendants: true}) options!: QueryList<TypeaheadOption>;
+  @ViewChildren(TypeaheadOption) options!: QueryList<TypeaheadOption>;
 
   private _changeDetectorRef = inject(ChangeDetectorRef);
 
@@ -45,7 +46,7 @@ export class Typeahead {
     );
   }
 
-  ngAfterContentInit() {
+  ngAfterViewInit() {
     this.keyManager = new ActiveDescendantKeyManager<TypeaheadOption>(this.options)
       .withWrap()
       .skipPredicate(this._skipPredicate);
@@ -107,9 +108,10 @@ export class Typeahead {
   }
 
   onKeydown(event: KeyboardEvent) {
-    console.log('onKeydown', this.keyManager);
+    console.log('onKeydown', this.keyManager, this.options.length);
     if (this.keyManager) {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    console.log('onKeydown - del 2', this.keyManager, this.keyManager.onKeydown, event);
         this.keyManager.onKeydown(event);
         event.preventDefault();
       } else if (event.key === 'Enter' && this.keyManager.activeItem) {
