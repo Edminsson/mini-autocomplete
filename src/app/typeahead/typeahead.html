@@ -1,12 +1,11 @@
-<h2>Typeaheaad</h2>
+<h2>Typeahead</h2>
 <p>Manuell hantering av paneler. Keymanager för tangenthantering.</p>
 <div class="typeahead-container">
   <input 
     #input
+    appTypeahead
     type="text"
-    [formControl]="searchControl"
-    (keydown)="onKeydown($event)"
-    (focus)="openPanel()">
+    [formControl]="searchControl">
 </div>
 
 <ng-template #resultsPanel>
@@ -16,7 +15,6 @@
       <app-typeahead-option
         class="result-item"
         [class.active]="keyManager?.activeItemIndex === i"
-        (click)="selectState(option)"
         role="option"
         [id]="'option-' + i">
         {{ option }}

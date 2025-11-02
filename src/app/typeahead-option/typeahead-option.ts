@@ -1,5 +1,14 @@
 import { FocusableOption, FocusOrigin, Highlightable, ListKeyManagerOption } from '@angular/cdk/a11y';
-import { ChangeDetectorRef, Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, EventEmitter, inject, Input, Output, ViewChild } from '@angular/core';
+
+ export class OptionSelectionChange<T = any> {
+   constructor(
+     /** Reference to the option that emitted the event. */
+     public source: TypeaheadOption<T>,
+     /** Whether the change in the option's value was a result of a user action. */
+     public isUserInput = false,
+   ) {}
+ }
 
 @Component({
   selector: 'app-typeahead-option',
@@ -12,10 +21,16 @@ import { ChangeDetectorRef, Component, ElementRef, inject, ViewChild } from '@an
     'class': 'typeahead-option',
   },
 })
-export class TypeaheadOption implements ListKeyManagerOption, Highlightable, FocusableOption {
+export class TypeaheadOption<T = any> implements ListKeyManagerOption, Highlightable, FocusableOption {
   private _element = inject<ElementRef<HTMLElement>>(ElementRef);
   private _active = false;
   private _changeDetectorRef = inject(ChangeDetectorRef);
+  private _selected = false;
+
+   /** Event emitted when the option is selected or deselected. */
+   // tslint:disable-next-line:no-output-on-prefix
+   @Output() readonly onSelectionChange = new EventEmitter<OptionSelectionChange<T>>();
+ 
 
    /** Element containing the option's text. */
    @ViewChild('text', {static: true}) _text: ElementRef<HTMLElement> | undefined;
@@ -30,6 +45,9 @@ export class TypeaheadOption implements ListKeyManagerOption, Highlightable, Foc
       return this._active;
     }
 
+   /** The form value of the option. */
+   @Input() value?: T;
+
    /**
     * The displayed value of the option. It is necessary to show the selected option in the
     * select's trigger.
@@ -37,6 +55,11 @@ export class TypeaheadOption implements ListKeyManagerOption, Highlightable, Foc
    get viewValue(): string {
      // TODO(kara): Add input property alternative for node envs.
      return (this._text?.nativeElement.textContent || '').trim();
+   }
+
+   /** Whether or not the option is currently selected. */
+   get selected(): boolean {
+     return this._selected;
    }
 
   /** Sets focus onto this option. */
@@ -83,6 +106,46 @@ export class TypeaheadOption implements ListKeyManagerOption, Highlightable, Foc
    getLabel(): string {
      return this.viewValue;
    }
+
+   /**
+    * `Selects the option while indicating the selection came from the user. Used to
+    * determine if the select's view -> model callback should be invoked.`
+    */
+   _selectViaInteraction(): void {
+    this._selected = true;
+    this._changeDetectorRef.markForCheck();
+    this._emitSelectionChangeEvent(true);
+   }
+
+
+   /** Emits the selection change event. */
+   private _emitSelectionChangeEvent(isUserInput = false): void {
+     this.onSelectionChange.emit(new OptionSelectionChange<T>(this, isUserInput));
+   }
  
+   /** Selects the option. */
+   select(emitEvent = true): void {
+     if (!this._selected) {
+       this._selected = true;
+       this._changeDetectorRef.markForCheck();
+ 
+       if (emitEvent) {
+         this._emitSelectionChangeEvent();
+       }
+     }
+   }
+ 
+   /** Deselects the option. */
+   deselect(emitEvent = true): void {
+     if (this._selected) {
+       this._selected = false;
+       this._changeDetectorRef.markForCheck();
+ 
+       if (emitEvent) {
+         this._emitSelectionChangeEvent();
+       }
+     }
+   }
+
 
 }
